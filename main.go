@@ -12,7 +12,7 @@ type Task struct {
 }
 
 func main() {
-	http.HandleFunc("/tasks", getTasks)
+	http.HandleFunc("/tasks", tasksHandler)
 
 	fmt.Println("Servidor rodando na porta 8080")
 
@@ -20,6 +20,20 @@ func main() {
 
 	if err != nil {
 		fmt.Println("Erro ao iniciar servidor:", err)
+	}
+}
+
+func tasksHandler(w http.ResponseWriter, r *http.Request) {
+
+	switch r.Method {
+	case http.MethodGet:
+		getTasks(w, r)
+
+	case http.MethodPost:
+		createTask(w, r)
+
+	default:
+		http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -38,4 +52,21 @@ func getTasks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	json.NewEncoder(w).Encode(tasks)
+}
+
+func createTask(w http.ResponseWriter, r *http.Request) {
+	var task Task
+
+	err := json.NewDecoder(r.Body).Decode(&task)
+
+	if err != nil {
+		http.Error(w, "JSON inválido", http.StatusBadRequest)
+		return
+	}
+
+	task.ID = 3
+
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(task)
 }
