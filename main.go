@@ -41,7 +41,8 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 
 	parts := strings.Split(r.URL.Path, "/")
 
-	if len(parts) == 3 && r.Method == http.MethodGet {
+	if len(parts) == 3 {
+
 		id, err := strconv.Atoi(parts[2])
 
 		if err != nil {
@@ -49,19 +50,19 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		getTask(w, r, id)
-		return
-	}
+		switch r.Method {
+		case http.MethodGet:
+			getTasks(w, r)
 
-	switch r.Method {
-	case http.MethodGet:
-		getTasks(w, r)
+		case http.MethodPost:
+			createTask(w, r)
+		
+		case http.MethodPut:
+			updateTask(w, r, id)
 
-	case http.MethodPost:
-		createTask(w, r)
-
-	default:
-		http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
+		default:
+			http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
+		}
 	}
 }
 
@@ -102,4 +103,30 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	json.NewEncoder(w).Encode(task)
+}
+
+func updateTask(w http.ResponseWriter, r *http.Request, id int) {
+	var updatedTask Task
+
+	// Pega o JSON da requisição 
+	decoder := json.NewDecoder(r.Body)
+	// Transforma o JSON em uma struct Task
+	err := decoder.Decode(&updatedTask)
+
+	if err != nil {
+		http.Error(w, "JSON inválido", http.StatusBadRequest)
+		return
+	}
+
+	for i, task := range tasks {
+		if task.ID == id {
+			tasks[i].Title = updatedTask.Title
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(tasks[i])
+			return
+		}
+	}
+
+	http.Error(w, "Tarefa não encontrada", http.StatusNotFound)
 }
