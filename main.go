@@ -83,7 +83,6 @@ func getTask(w http.ResponseWriter, r *http.Request, id int) {
 	}
 
 	http.Error(w, "Tarefa não encontrada", http.StatusNotFound)
-	
 }
 
 func createTask(w http.ResponseWriter, r *http.Request) {
