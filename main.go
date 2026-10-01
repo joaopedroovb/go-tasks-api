@@ -95,6 +95,11 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if task.Title == "" {
+		http.Error(w, "Título é obrigatório", http.StatusBadRequest)
+		return
+	}
+
 	task.ID = len(tasks) + 1
 	tasks = append(tasks, task)
 
@@ -117,11 +122,18 @@ func updateTask(w http.ResponseWriter, r *http.Request, id int) {
 		return
 	}
 
+	if updatedTask.Title == ""{
+		http.Error(w, "Título é obrigatório", http.StatusBadRequest)
+		return
+	}
+
 	for i, task := range tasks {
 		if task.ID == id {
 			tasks[i].Title = updatedTask.Title
+			
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
+
 			json.NewEncoder(w).Encode(tasks[i])
 			return
 		}
