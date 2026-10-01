@@ -11,6 +11,17 @@ type Task struct {
 	Title string `json:"title"`
 }
 
+var tasks = []Task{
+	{
+		ID:	1,
+		Title: "Aprender Go",
+	},
+	{
+		ID:    2,
+		Title: "Criar API REST",
+	}
+}
+
 func main() {
 	http.HandleFunc("/tasks", tasksHandler)
 
@@ -38,17 +49,6 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getTasks(w http.ResponseWriter, r *http.Request) {
-	tasks := []Task{
-		{
-			ID:    1,
-			Title: "Aprender Go",
-		},
-		{
-			ID:    2,
-			Title: "Criar API REST",
-		},
-	}
-
 	w.Header().Set("Content-Type", "application/json")
 
 	json.NewEncoder(w).Encode(tasks)
@@ -64,7 +64,9 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task.ID = 3
+	task.ID = len(tasks) + 1
+	
+	tasks = append(tasks, task)
 
 	w.Header().Set("Content-Type", "application/json")
 
