@@ -60,6 +60,9 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 		case http.MethodPut:
 			updateTask(w, r, id)
 
+		case http.MethodDelete:
+			deleteTask(w, r, id)
+
 		default:
 			http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
 		}
@@ -130,11 +133,28 @@ func updateTask(w http.ResponseWriter, r *http.Request, id int) {
 	for i, task := range tasks {
 		if task.ID == id {
 			tasks[i].Title = updatedTask.Title
-			
+
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 
 			json.NewEncoder(w).Encode(tasks[i])
+			return
+		}
+	}
+
+	http.Error(w, "Tarefa não encontrada", http.StatusNotFound)
+}
+
+func deleteTask (w http.ResponseWriter, r *http.Request, id int) {
+
+	for i, task := range tasks {
+
+		if task.ID == id {
+
+			tasks = append(tasks[:i], tasks[i+1:]...)
+
+			w.WriteHeader(http.StatusNoContent)
+
 			return
 		}
 	}
