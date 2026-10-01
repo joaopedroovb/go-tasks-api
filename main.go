@@ -145,19 +145,27 @@ func updateTask(w http.ResponseWriter, r *http.Request, id int) {
 	http.Error(w, "Tarefa não encontrada", http.StatusNotFound)
 }
 
-func deleteTask (w http.ResponseWriter, r *http.Request, id int) {
+func deleteTask(w http.ResponseWriter, r *http.Request, id int) {
 
-	for i, task := range tasks {
+	var newTasks []Task
+	encontrou := false
+
+	for _, task := range tasks {
 
 		if task.ID == id {
-
-			tasks = append(tasks[:i], tasks[i+1:]...)
-
-			w.WriteHeader(http.StatusNoContent)
-
-			return
+			encontrou = true
+			continue
 		}
+
+		newTasks = append(newTasks, task)
 	}
 
-	http.Error(w, "Tarefa não encontrada", http.StatusNotFound)
+	if !encontrou {
+		http.Error(w, "Tarefa não encontrada", http.StatusNotFound)
+		return
+	}
+
+	tasks = newTasks
+
+	w.WriteHeader(http.StatusNoContent)
 }
