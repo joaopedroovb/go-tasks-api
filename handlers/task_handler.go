@@ -15,9 +15,12 @@ type CreateTaskInput struct {
 	Title string `json:"title"`
 }
 
+// Sem o ponteiro, se usuario tentasse atualizar sem o Completed
+// o go iria tratar ele como false, agora com ponteiro muda
+// pq se for sem o completed ira chegar nil, aka campo nao enviado
 type UpdateTaskInput struct {
-	Title     string `json:"title"`
-	Completed bool   `json:"completed"`
+	Title     *string `json:"title"`
+	Completed *bool   `json:"completed"`
 }
 
 func TasksHandler(
