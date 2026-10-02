@@ -13,6 +13,22 @@ func TasksHandler(w http.ResponseWriter, r *http.Request) {
 
 	parts := strings.Split(r.URL.Path, "/")
 
+	// /tasks
+	if len(parts) == 2 {
+
+		switch r.Method {
+		case http.MethodGet:
+			getTasks(w, r)
+
+		case http.MethodPost:
+			createTask(w, r)
+		
+		default:
+			http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
+		}
+	}
+
+	// /tasks/:id
 	if len(parts) == 3 {
 
 		id, err := strconv.Atoi(parts[2])
@@ -24,11 +40,8 @@ func TasksHandler(w http.ResponseWriter, r *http.Request) {
 
 		switch r.Method {
 		case http.MethodGet:
-			getTasks(w, r)
+			getTask(w, r, id)
 
-		case http.MethodPost:
-			createTask(w, r)
-		
 		case http.MethodPut:
 			updateTask(w, r, id)
 
@@ -38,7 +51,11 @@ func TasksHandler(w http.ResponseWriter, r *http.Request) {
 		default:
 			http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
 		}
+
+		return
 	}
+
+	http.Error(w, "Rota não encontrada", http.StatusNotFound)
 }
 
 func getTasks(w http.ResponseWriter, r *http.Request) {
