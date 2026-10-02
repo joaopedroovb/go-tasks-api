@@ -6,10 +6,13 @@ import (
 	"go-tasks-api/repositories"
 )
 
+// O service diz, quero algo que seja um TaskRepository
+// O service depende de um Repository para funcionar
 type TaskService struct {
 	repository repositories.TaskRepository
 }
 
+// recebe o repository
 func NewTaskService(repository repositories.TaskRepository) *TaskService {
 	return &TaskService{
 		repository: repository,
