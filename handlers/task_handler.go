@@ -26,6 +26,8 @@ func TasksHandler(w http.ResponseWriter, r *http.Request) {
 		default:
 			http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
 		}
+
+		return
 	}
 
 	// /tasks/:id
@@ -126,7 +128,7 @@ func updateTask(w http.ResponseWriter, r *http.Request, id int) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 
-			json.NewEncoder(w).Encode(tasks[i])
+			json.NewEncoder(w).Encode(models.Tasks[i])
 			return
 		}
 	}
