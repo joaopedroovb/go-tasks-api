@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"go-tasks-api/models"
+	"go-tasks-api/handlers"
 )
 
 func main() {
-	http.HandleFunc("/tasks", tasksHandler)
-	http.HandleFunc("/tasks/", tasksHandler)
+	http.HandleFunc("/tasks", handlers.TasksHandler)
+	http.HandleFunc("/tasks/", handlers.TasksHandler)
 
 	fmt.Println("Servidor rodando na porta 8080")
 

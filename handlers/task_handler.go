@@ -48,7 +48,7 @@ func getTasks(w http.ResponseWriter, r *http.Request) {
 }
 
 func getTask(w http.ResponseWriter, r *http.Request, id int) {
-	for _, task := range tasks {
+	for _, task := range models.Tasks {
 		if task.ID == id {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -61,7 +61,7 @@ func getTask(w http.ResponseWriter, r *http.Request, id int) {
 }
 
 func createTask(w http.ResponseWriter, r *http.Request) {
-	var task Task
+	var task models.Task
 
 	err := json.NewDecoder(r.Body).Decode(&task)
 
@@ -75,8 +75,8 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task.ID = len(tasks) + 1
-	tasks = append(tasks, task)
+	task.ID = len(models.Tasks) + 1
+	models.Tasks = append(models.Tasks, task)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -85,7 +85,7 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateTask(w http.ResponseWriter, r *http.Request, id int) {
-	var updatedTask Task
+	var updatedTask models.Task
 
 	// Pega o JSON da requisição 
 	decoder := json.NewDecoder(r.Body)
@@ -102,9 +102,9 @@ func updateTask(w http.ResponseWriter, r *http.Request, id int) {
 		return
 	}
 
-	for i, task := range tasks {
+	for i, task := range models.Tasks {
 		if task.ID == id {
-			tasks[i].Title = updatedTask.Title
+			models.Tasks[i].Title = updatedTask.Title
 
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -119,10 +119,10 @@ func updateTask(w http.ResponseWriter, r *http.Request, id int) {
 
 func deleteTask(w http.ResponseWriter, r *http.Request, id int) {
 
-	var newTasks []Task
+	var newTasks []models.Task
 	encontrou := false
 
-	for _, task := range tasks {
+	for _, task := range models.Tasks {
 
 		if task.ID == id {
 			encontrou = true
@@ -137,7 +137,7 @@ func deleteTask(w http.ResponseWriter, r *http.Request, id int) {
 		return
 	}
 
-	tasks = newTasks
+	models.Tasks = newTasks
 
 	w.WriteHeader(http.StatusNoContent)
 }
