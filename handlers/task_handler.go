@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -204,22 +205,13 @@ func updateTask(
 		return
 	}
 
-	task, found, err := service.Update(id, input.Title, input.Completed)
+	task, err := service.Update(id, input.Title, input.Completed)
 
 	if err != nil {
 		http.Error(
 			w,
 			err.Error(),
 			http.StatusBadRequest,
-		)
-		return
-	}
-
-	if !found {
-		http.Error(
-			w,
-			"Tarefa não encontrada",
-			http.StatusNotFound,
 		)
 		return
 	}
@@ -245,19 +237,24 @@ func patchTask(
 		return
 	}
 
-	task, found, err := service.Patch(
+	task, err := service.Patch(
 		id,
 		input.Title,
 		input.Completed,
 	)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+		if errors.Is(err, services.ErrTaskNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
 
-	if !found {
-		http.Error(w, "Tarefa não encontrada", http.StatusNotFound)
+		if errors.Is(err, services.ErrInvalidTitle) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		http.Error(w, "Erro interno", http.StatusInternalServerError)
 		return
 	}
 

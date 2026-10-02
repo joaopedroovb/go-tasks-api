@@ -1,7 +1,6 @@
 package services
 
 import (
-	"fmt"
 	"go-tasks-api/models"
 	"go-tasks-api/repositories"
 )
@@ -30,7 +29,7 @@ func (s *TaskService) GetByID(id int) (models.Task, bool) {
 func (s *TaskService) Create(title string) (models.Task, error) {
 
 	if title == "" {
-		return models.Task{}, fmt.Errorf("titulo e obrigatorio")
+		return models.Task{}, ErrInvalidTitle
 	}
 
 	task := models.Task{
@@ -41,40 +40,43 @@ func (s *TaskService) Create(title string) (models.Task, error) {
 	return s.repository.Create(task), nil
 }
 
-func (s *TaskService) Update(id int, title string, completed bool) (models.Task, bool, error) {
+func (s *TaskService) Update(
+	id int,
+	title string,
+	completed bool,
+) (models.Task, error) {
 
 	if title == "" {
-		return models.Task{}, false, fmt.Errorf("titulo e obrigatorio")
+		return models.Task{}, ErrInvalidTitle
 	}
 
 	task, found := s.repository.GetByID(id)
 
 	if !found {
-		return models.Task{}, false, nil
+		return models.Task{}, ErrTaskNotFound
 	}
 
 	task.Title = title
+	task.Completed = completed
 
-	updatedTask, found := s.repository.Update(task)
-
-	return updatedTask, found, nil
+	return s.repository.Update(task), nil
 }
 
 func (s *TaskService) Patch(
 	id int,
 	inputTitle *string,
 	inputCompleted *bool,
-) (models.Task, bool, error) {
+) (models.Task, error) {
 
 	task, found := s.repository.GetByID(id)
 
 	if !found {
-		return models.Task{}, false, nil
+		return models.Task{}, ErrTaskNotFound
 	}
 
 	if inputTitle != nil {
 		if *inputTitle == "" {
-			return models.Task{}, false, fmt.Errorf("título é obrigatório")
+			return models.Task{}, ErrInvalidTitle
 		}
 
 		task.Title = *inputTitle
@@ -84,9 +86,7 @@ func (s *TaskService) Patch(
 		task.Completed = *inputCompleted
 	}
 
-	updatedTask, found := s.repository.Update(task)
-
-	return updatedTask, found, nil
+	return s.repository.Update(task), nil
 }
 
 func (s *TaskService) Delete(id int) bool {
