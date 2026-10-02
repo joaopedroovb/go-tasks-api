@@ -6,96 +6,157 @@ import (
 	"strconv"
 	"strings"
 
-	"go-tasks-api/models"
+	"go-tasks-api/services"
 )
 
-func TasksHandler(w http.ResponseWriter, r *http.Request) {
+func TasksHandler(
+	service *services.TaskService,
+) http.HandlerFunc {
 
-	parts := strings.Split(r.URL.Path, "/")
+	return func(w http.ResponseWriter, r *http.Request) {
 
-	// /tasks
-	if len(parts) == 2 {
+		parts := strings.Split(r.URL.Path, "/")
 
-		switch r.Method {
-		case http.MethodGet:
-			getTasks(w, r)
+		// /tasks
+		if len(parts) == 2 {
 
-		case http.MethodPost:
-			createTask(w, r)
-		
-		default:
-			http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
-		}
+			switch r.Method {
 
-		return
-	}
+			case http.MethodGet:
+				getTasks(w, service)
 
-	// /tasks/:id
-	if len(parts) == 3 {
+			case http.MethodPost:
+				createTask(w, r, service)
 
-		id, err := strconv.Atoi(parts[2])
+			default:
+				http.Error(
+					w,
+					"Método não permitido",
+					http.StatusMethodNotAllowed,
+				)
+			}
 
-		if err != nil {
-			http.Error(w, "ID inválido", http.StatusBadRequest)
 			return
 		}
 
-		switch r.Method {
-		case http.MethodGet:
-			getTask(w, r, id)
+		// /tasks/:id
+		if len(parts) == 3 {
 
-		case http.MethodPut:
-			updateTask(w, r, id)
+			id, err := strconv.Atoi(parts[2])
 
-		case http.MethodDelete:
-			deleteTask(w, r, id)
+			if err != nil {
+				http.Error(
+					w,
+					"ID inválido",
+					http.StatusBadRequest,
+				)
+				return
+			}
 
-		default:
-			http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
+			switch r.Method {
+
+			case http.MethodGet:
+				getTask(w, service, id)
+
+			case http.MethodPut:
+				updateTask(w, r, service, id)
+				//w -> como eu respondo ao cliente?
+				//r -> o que o cliente me enviou?
+				//qual metodo ele enviou
+				//r.URL.Path -> qual caminho solicitado ->/tasks/10
+				//r.URL.Query() -> quais parms vieram na URL -> /tasks?page=2&limit=10 -> page := r.URL.Query().Get("page")
+				//r.Header.Get() -> ler um header da requisicao -> r.Header.Get("Authorization")
+				//r.Body -> ler o corpo enviado pelo cliente
+				//service -> busca no sistema
+				//id -> identifica
+
+			case http.MethodDelete:
+				deleteTask(w, service, id)
+
+			default:
+				http.Error(
+					w,
+					"Método não permitido",
+					http.StatusMethodNotAllowed,
+				)
+			}
+
+			return
 		}
 
-		return
+		http.Error(
+			w,
+			"Rota não encontrada",
+			http.StatusNotFound,
+		)
 	}
-
-	http.Error(w, "Rota não encontrada", http.StatusNotFound)
 }
 
-func getTasks(w http.ResponseWriter, r *http.Request) {
+func getTasks(
+	w http.ResponseWriter,
+	service *services.TaskService,
+) {
+
+	tasks := service.GetAll()
+
 	w.Header().Set("Content-Type", "application/json")
 
-	json.NewEncoder(w).Encode(models.Tasks)
+	json.NewEncoder(w).Encode(tasks)
 }
 
-func getTask(w http.ResponseWriter, r *http.Request, id int) {
-	for _, task := range models.Tasks {
-		if task.ID == id {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(task)
-			return
-		}
+func getTask(
+	w http.ResponseWriter,
+	service *services.TaskService,
+	id int,
+) {
+	task, found := service.GetByID(id)
+
+	if !found {
+		http.Error(
+			w,
+			"Tarefa nao encontrada",
+			http.StatusNotFound,
+		)
+		return
 	}
 
-	http.Error(w, "Tarefa não encontrada", http.StatusNotFound)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	json.NewEncoder(w).Encode(task)
+
 }
 
-func createTask(w http.ResponseWriter, r *http.Request) {
-	var task models.Task
+func createTask(
+	w http.ResponseWriter,
+	r *http.Request,
+	service *services.TaskService,
+) {
 
-	err := json.NewDecoder(r.Body).Decode(&task)
+	var input struct {
+		Title string `json:"title"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&input)
 
 	if err != nil {
-		http.Error(w, "JSON inválido", http.StatusBadRequest)
+		http.Error(
+			w, "JSON inválido",
+			http.StatusBadRequest,
+		)
 		return
 	}
 
-	if task.Title == "" {
-		http.Error(w, "Título é obrigatório", http.StatusBadRequest)
+	task, err := service.Create(input.Title)
+
+	if err != nil {
+		http.Error(
+			w,
+			err.Error(),
+			http.StatusBadRequest,
+		)
 		return
 	}
-
-	task.ID = len(models.Tasks) + 1
-	models.Tasks = append(models.Tasks, task)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -103,60 +164,68 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(task)
 }
 
-func updateTask(w http.ResponseWriter, r *http.Request, id int) {
-	var updatedTask models.Task
+func updateTask(
+	w http.ResponseWriter,
+	r *http.Request,
+	service *services.TaskService,
+	id int,
+) {
 
-	// Pega o JSON da requisição 
+	var input struct {
+		Title string `json:"title"`
+	}
+
+	// Pega o JSON da requisição
 	decoder := json.NewDecoder(r.Body)
-	// Transforma o JSON em uma struct Task
-	err := decoder.Decode(&updatedTask)
+	// Transforma o JSON em uma struct input
+	err := decoder.Decode(&input)
 
 	if err != nil {
 		http.Error(w, "JSON inválido", http.StatusBadRequest)
 		return
 	}
 
-	if updatedTask.Title == ""{
-		http.Error(w, "Título é obrigatório", http.StatusBadRequest)
+	task, found, err := service.Update(id, input.Title)
+
+	if err != nil {
+		http.Error(
+			w,
+			err.Error(),
+			http.StatusBadRequest,
+		)
 		return
 	}
 
-	for i, task := range models.Tasks {
-		if task.ID == id {
-			models.Tasks[i].Title = updatedTask.Title
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-
-			json.NewEncoder(w).Encode(models.Tasks[i])
-			return
-		}
+	if !found {
+		http.Error(
+			w,
+			"Tarefa não encontrada",
+			http.StatusNotFound,
+		)
 	}
 
-	http.Error(w, "Tarefa não encontrada", http.StatusNotFound)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	json.NewEncoder(w).Encode(task)
 }
 
-func deleteTask(w http.ResponseWriter, r *http.Request, id int) {
+func deleteTask(
+	w http.ResponseWriter,
+	service *services.TaskService,
+	id int,
+) {
 
-	var newTasks []models.Task
-	encontrou := false
+	found := service.Delete(id)
 
-	for _, task := range models.Tasks {
-
-		if task.ID == id {
-			encontrou = true
-			continue
-		}
-
-		newTasks = append(newTasks, task)
-	}
-
-	if !encontrou {
-		http.Error(w, "Tarefa não encontrada", http.StatusNotFound)
+	if !found {
+		http.Error(
+			w,
+			"Tarefa não encontrada",
+			http.StatusNotFound,
+		)
 		return
 	}
-
-	models.Tasks = newTasks
 
 	w.WriteHeader(http.StatusNoContent)
 }

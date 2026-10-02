@@ -5,11 +5,25 @@ import (
 	"net/http"
 
 	"go-tasks-api/handlers"
+	"go-tasks-api/repositories"
+	"go-tasks-api/services"
 )
 
 func main() {
-	http.HandleFunc("/tasks", handlers.TasksHandler)
-	http.HandleFunc("/tasks/", handlers.TasksHandler)
+
+	repository := repositories.NewMemoryTaskRepository()
+
+	service := services.NewTaskService(repository)
+
+	http.HandleFunc(
+		"/tasks",
+		handlers.TasksHandler(service),
+	)
+
+	http.HandleFunc(
+		"/tasks/",
+		handlers.TasksHandler(service),
+	)
 
 	fmt.Println("Servidor rodando na porta 8080")
 
