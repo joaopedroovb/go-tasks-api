@@ -9,6 +9,11 @@ import (
 	"go-tasks-api/services"
 )
 
+// O cliente ira mandar so o title no body
+type CreateTaskInput struct {
+	Title string `json:"title"`
+}
+
 func TasksHandler(
 	service *services.TaskService,
 ) http.HandlerFunc {
@@ -133,9 +138,7 @@ func createTask(
 	service *services.TaskService,
 ) {
 
-	var input struct {
-		Title string `json:"title"`
-	}
+	var input CreateTaskInput
 
 	err := json.NewDecoder(r.Body).Decode(&input)
 
@@ -171,9 +174,7 @@ func updateTask(
 	id int,
 ) {
 
-	var input struct {
-		Title string `json:"title"`
-	}
+	var input CreateTaskInput
 
 	// Pega o JSON da requisição
 	decoder := json.NewDecoder(r.Body)
