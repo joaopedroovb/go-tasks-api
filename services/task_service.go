@@ -60,6 +60,35 @@ func (s *TaskService) Update(id int, title string, completed bool) (models.Task,
 	return updatedTask, found, nil
 }
 
+func (s *TaskService) Patch(
+	id int,
+	inputTitle *string,
+	inputCompleted *bool,
+) (models.Task, bool, error) {
+
+	task, found := s.repository.GetByID(id)
+
+	if !found {
+		return models.Task{}, false, nil
+	}
+
+	if inputTitle != nil {
+		if *inputTitle == "" {
+			return models.Task{}, false, fmt.Errorf("título é obrigatório")
+		}
+
+		task.Title = *inputTitle
+	}
+
+	if inputCompleted != nil {
+		task.Completed = *inputCompleted
+	}
+
+	updatedTask, found := s.repository.Update(task)
+
+	return updatedTask, found, nil
+}
+
 func (s *TaskService) Delete(id int) bool {
 	return s.repository.Delete(id)
 }

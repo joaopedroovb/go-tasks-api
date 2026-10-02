@@ -16,9 +16,15 @@ type CreateTaskInput struct {
 }
 
 // Sem o ponteiro, se usuario tentasse atualizar sem o Completed
-// o go iria tratar ele como false, agora com ponteiro muda
-// pq se for sem o completed ira chegar nil, aka campo nao enviado
+// o go iria tratar ele como false
 type UpdateTaskInput struct {
+	Title     string `json:"title"`
+	Completed bool   `json:"completed"`
+}
+
+// agora com ponteiro ele so altera o que chegar com valor
+// se tiver sem mantem o valor
+type PatchTaskInput struct {
 	Title     *string `json:"title"`
 	Completed *bool   `json:"completed"`
 }
@@ -83,6 +89,9 @@ func TasksHandler(
 				//r.Body -> ler o corpo enviado pelo cliente
 				//service -> busca no sistema
 				//id -> identifica
+
+			case http.MethodPatch:
+				patchTask(w, r, service, id)
 
 			case http.MethodDelete:
 				deleteTask(w, service, id)
@@ -212,6 +221,43 @@ func updateTask(
 			"Tarefa não encontrada",
 			http.StatusNotFound,
 		)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	json.NewEncoder(w).Encode(task)
+}
+
+func patchTask(
+	w http.ResponseWriter,
+	r *http.Request,
+	service *services.TaskService,
+	id int,
+) {
+	var input PatchTaskInput
+
+	err := json.NewDecoder(r.Body).Decode(&input)
+
+	if err != nil {
+		http.Error(w, "JSON inválido", http.StatusBadRequest)
+		return
+	}
+
+	task, found, err := service.Patch(
+		id,
+		input.Title,
+		input.Completed,
+	)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if !found {
+		http.Error(w, "Tarefa não encontrada", http.StatusNotFound)
 		return
 	}
 
