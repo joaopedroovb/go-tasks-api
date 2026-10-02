@@ -1,13 +1,14 @@
 package models
 
 type Task struct {
-	ID    int    `json:"id"`
-	Title string `json:"title"`
+	ID        int    `json:"id"`
+	Title     string `json:"title"`
+	Completed bool   `json:"completed"`
 }
 
 var Tasks = []Task{
 	{
-		ID:	1,
+		ID:    1,
 		Title: "Aprender Go",
 	},
 	{
