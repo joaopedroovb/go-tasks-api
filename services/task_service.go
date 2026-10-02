@@ -41,7 +41,7 @@ func (s *TaskService) Create(title string) (models.Task, error) {
 	return s.repository.Create(task), nil
 }
 
-func (s *TaskService) Update(id int, title string) (models.Task, bool, error) {
+func (s *TaskService) Update(id int, title string, completed bool) (models.Task, bool, error) {
 
 	if title == "" {
 		return models.Task{}, false, fmt.Errorf("titulo e obrigatorio")

@@ -16,7 +16,8 @@ type CreateTaskInput struct {
 }
 
 type UpdateTaskInput struct {
-	Title string `json:"title"`
+	Title     string `json:"title"`
+	Completed bool   `json:"completed"`
 }
 
 func TasksHandler(
@@ -191,7 +192,7 @@ func updateTask(
 		return
 	}
 
-	task, found, err := service.Update(id, input.Title)
+	task, found, err := service.Update(id, input.Title, input.Completed)
 
 	if err != nil {
 		http.Error(
