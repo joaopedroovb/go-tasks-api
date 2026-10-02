@@ -47,11 +47,13 @@ func (s *TaskService) Update(id int, title string) (models.Task, bool, error) {
 		return models.Task{}, false, fmt.Errorf("titulo e obrigatorio")
 	}
 
-	task := models.Task{
-		ID:        id,
-		Title:     title,
-		Completed: false,
+	task, found := s.repository.GetByID(id)
+
+	if !found {
+		return models.Task{}, false, nil
 	}
+
+	task.Title = title
 
 	updatedTask, found := s.repository.Update(task)
 

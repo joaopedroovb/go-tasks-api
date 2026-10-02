@@ -10,7 +10,12 @@ import (
 )
 
 // O cliente ira mandar so o title no body
+// DTO -> o que a API recebe
 type CreateTaskInput struct {
+	Title string `json:"title"`
+}
+
+type UpdateTaskInput struct {
 	Title string `json:"title"`
 }
 
@@ -174,7 +179,7 @@ func updateTask(
 	id int,
 ) {
 
-	var input CreateTaskInput
+	var input UpdateTaskInput
 
 	// Pega o JSON da requisição
 	decoder := json.NewDecoder(r.Body)
@@ -203,6 +208,7 @@ func updateTask(
 			"Tarefa não encontrada",
 			http.StatusNotFound,
 		)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
