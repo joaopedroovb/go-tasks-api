@@ -11,13 +11,13 @@ import (
 
 func main() {
 
-	// cria repository -> cria service usando repository -> cria handler usando service
-
+	// 1. Cria a implementação concreta do repository
 	repository := repositories.NewMemoryTaskRepository()
 
-	//injecao
+	// 2. Injeta o repository no service
 	service := services.NewTaskService(repository)
 
+	// 3. Injeta o service no handler
 	http.HandleFunc(
 		"/tasks",
 		handlers.TasksHandler(service),

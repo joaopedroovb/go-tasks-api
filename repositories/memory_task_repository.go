@@ -48,6 +48,7 @@ func (r *MemoryTaskRepository) Create(task models.Task) models.Task {
 	return task
 }
 
+// Pq manter o bool? Consegui encontrar e atualizar esse registro?
 func (r *MemoryTaskRepository) Update(task models.Task) (models.Task, bool) {
 
 	for i, currentTask := range r.tasks {

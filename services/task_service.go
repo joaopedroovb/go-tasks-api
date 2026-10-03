@@ -22,8 +22,14 @@ func (s *TaskService) GetAll() []models.Task {
 	return s.repository.GetAll()
 }
 
-func (s *TaskService) GetByID(id int) (models.Task, bool) {
-	return s.repository.GetByID(id)
+func (s *TaskService) GetByID(id int) (models.Task, error) {
+	task, found := s.repository.GetByID(id)
+
+	if !found {
+		return models.Task{}, ErrTaskNotFound
+	}
+
+	return task, nil
 }
 
 func (s *TaskService) Create(title string) (models.Task, error) {
@@ -59,7 +65,13 @@ func (s *TaskService) Update(
 	task.Title = title
 	task.Completed = completed
 
-	return s.repository.Update(task), nil
+	updatedTask, found := s.repository.Update(task)
+
+	if !found {
+		return models.Task{}, ErrTaskNotFound
+	}
+
+	return updatedTask, nil
 }
 
 func (s *TaskService) Patch(
@@ -86,9 +98,13 @@ func (s *TaskService) Patch(
 		task.Completed = *inputCompleted
 	}
 
-	return s.repository.Update(task), nil
+	updatedTask, found := s.repository.Update(task)
+
+	if !found {
+		return models.Task{}, ErrTaskNotFound
+	}
+
+	return updatedTask, nil
 }
 
-func (s *TaskService) Delete(id int) bool {
-	return s.repository.Delete(id)
-}
+func (s *TaskService) Delete(id int) error

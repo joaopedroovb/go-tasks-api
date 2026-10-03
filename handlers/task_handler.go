@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -133,14 +132,10 @@ func getTask(
 	service *services.TaskService,
 	id int,
 ) {
-	task, found := service.GetByID(id)
+	task, err := service.GetByID(id)
 
-	if !found {
-		http.Error(
-			w,
-			"Tarefa nao encontrada",
-			http.StatusNotFound,
-		)
+	if err != nil {
+		writeError(w, err)
 		return
 	}
 
@@ -172,11 +167,7 @@ func createTask(
 	task, err := service.Create(input.Title)
 
 	if err != nil {
-		http.Error(
-			w,
-			err.Error(),
-			http.StatusBadRequest,
-		)
+		writeError(w, err)
 		return
 	}
 
@@ -205,14 +196,14 @@ func updateTask(
 		return
 	}
 
-	task, err := service.Update(id, input.Title, input.Completed)
+	task, err := service.Update(
+		id,
+		input.Title,
+		input.Completed,
+	)
 
 	if err != nil {
-		http.Error(
-			w,
-			err.Error(),
-			http.StatusBadRequest,
-		)
+		writeError(w, err)
 		return
 	}
 
@@ -244,17 +235,7 @@ func patchTask(
 	)
 
 	if err != nil {
-		if errors.Is(err, services.ErrTaskNotFound) {
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
-		}
-
-		if errors.Is(err, services.ErrInvalidTitle) {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		http.Error(w, "Erro interno", http.StatusInternalServerError)
+		writeError(w, err)
 		return
 	}
 
@@ -270,14 +251,10 @@ func deleteTask(
 	id int,
 ) {
 
-	found := service.Delete(id)
+	err := service.Delete(id)
 
-	if !found {
-		http.Error(
-			w,
-			"Tarefa não encontrada",
-			http.StatusNotFound,
-		)
+	if err != nil {
+		writeError(w, err)
 		return
 	}
 
