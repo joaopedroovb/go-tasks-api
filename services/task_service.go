@@ -107,4 +107,12 @@ func (s *TaskService) Patch(
 	return updatedTask, nil
 }
 
-func (s *TaskService) Delete(id int) error
+func (s *TaskService) Delete(id int) error {
+	found := s.repository.Delete(id)
+
+	if !found {
+		return ErrTaskNotFound
+	}
+
+	return nil
+}
